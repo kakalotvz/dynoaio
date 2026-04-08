@@ -1,0 +1,35 @@
+# ===== Build outputs =====
+dist/
+build/
+*.spec.bak
+
+# ===== Installer outputs =====
+installer/output/
+installer/zips/
+installer/wizard_banner.bmp
+installer/wizard_icon.bmp
+
+# ===== Apps & Drivers (quá nặng, upload riêng lên GitHub Release) =====
+Apps/
+Drivers/
+installed/
+
+# ===== Python cache =====
+__pycache__/
+*.py[cod]
+*.pyo
+.hypothesis/
+
+# ===== Logs =====
+*.log
+dyno_debug.log
+
+# ===== IDE =====
+.vscode/
+.idea/
+*.kiro/
+
+# ===== OS =====
+Thumbs.db
+.DS_Store
+desktop.ini

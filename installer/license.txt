@@ -1,0 +1,32 @@
+ĐIỀU KHOẢN SỬ DỤNG PHẦN MỀM
+DYNO ALL IN ONE — PHIÊN BẢN 1.0
+
+Bản quyền © 2026 Khoa Lê. Tất cả quyền được bảo lưu.
+
+1. CHẤP NHẬN ĐIỀU KHOẢN
+   Bằng cách cài đặt hoặc sử dụng phần mềm này, bạn đồng ý tuân thủ
+   các điều khoản và điều kiện được nêu trong tài liệu này.
+
+2. GIẤY PHÉP SỬ DỤNG
+   Phần mềm này được cấp phép sử dụng cá nhân và thương mại trong
+   lĩnh vực dyno xe. Nghiêm cấm bán phần mềm này dưới bất kỳ hình thức nào mà không có sự cho
+   phép bằng văn bản của tác giả.
+
+3. GIỚI HẠN TRÁCH NHIỆM
+   Phần mềm được cung cấp "nguyên trạng" (as-is).
+   Phần mềm được tích hợp sẵn những phần mềm dyno của các hãng ECU đang có hiện nay.
+   Khả năng dyno hoàn toàn tùy thuộc vào kiến thức và kinh nghiệm của người dyno
+   tác giả không chịu trách nhiệm về bất kỳ thiệt hại nào phát sinh từ việc sử dụng
+   phần mềm này nếu có sự cố xảy ra trong quá trình sử dụng bao gồm cả việc mất dữ liệu, hỏng
+   thiết bị (ECU), hỏng xe hoặc tổn thất kinh doanh.
+
+4. CẬP NHẬT VÀ HỖ TRỢ
+   Tác giả có thể phát hành các bản cập nhật theo quyết định riêng.
+   Hỗ trợ kỹ thuật được cung cấp qua kênh liên hệ chính thức tại:
+   https://www.facebook.com/lee.khoa257
+
+5. ĐIỀU KHOẢN BỔ SUNG
+   (Sẽ cập nhật thêm khi có điều khoản bổ sung)
+
+Trang chủ: https://dynoaio.vercel.app
+Mọi thắc mắc và góp ý vui lòng liên hệ: https://www.facebook.com/lee.khoa257

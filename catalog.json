@@ -1,0 +1,71 @@
+{
+  "version": "1.0",
+  "updated": "2026-04-08",
+  "base_url": "https://github.com/kakalotvz/dynoaio/releases/download/apps",
+  "apps": [
+    {
+      "name": "ALLMOTO",
+      "display_name": "ALLMOTO PC",
+      "description": "Phần mềm dyno ALLMOTO",
+      "zip": "ALLMOTO.zip",
+      "size_mb": 145,
+      "versions": ["ALLMOTO"]
+    },
+    {
+      "name": "Apitech",
+      "display_name": "Apitech",
+      "description": "Phần mềm dyno Apitech",
+      "zip": "Apitech.zip",
+      "size_mb": 24,
+      "versions": ["Piggyback 2014", "STANDALONE V9"]
+    },
+    {
+      "name": "Aracer",
+      "display_name": "Aracer",
+      "description": "Phần mềm dyno Aracer RC Mini",
+      "zip": "Aracer.zip",
+      "size_mb": 116,
+      "versions": ["RC Mini Plus 2 & Mini 4C", "RC Mini5 QB v5.3"]
+    },
+    {
+      "name": "ATE",
+      "display_name": "ATE",
+      "description": "Phần mềm dyno ATE ECU Pro",
+      "zip": "ATE.zip",
+      "size_mb": 222,
+      "versions": ["ATE 2.1.2.0", "ATE Ecu Pro 8.035", "ATE Ecu Pro 9.01"]
+    },
+    {
+      "name": "BRT",
+      "display_name": "BRT",
+      "description": "Phần mềm dyno BRT Juken",
+      "zip": "BRT.zip",
+      "size_mb": 128,
+      "versions": ["JUKEN 5", "JUKEN 5+ và 5++"]
+    },
+    {
+      "name": "Kozi",
+      "display_name": "Kozi",
+      "description": "Phần mềm dyno Kozi ECU Pro",
+      "zip": "Kozi.zip",
+      "size_mb": 3,
+      "versions": ["KOZI ECU Pro V8"]
+    },
+    {
+      "name": "Redleo",
+      "display_name": "Redleo",
+      "description": "Phần mềm dyno Redleo ECU/CDI",
+      "zip": "Redleo.zip",
+      "size_mb": 403,
+      "versions": ["REDLEO CDI Pro V3", "REDLEO CDI Pro V6.1.8", "REDLEO ECU Pro 9.13", "REDLEO ECU PRO 9.2", "REDLEO Ultra Pro", "REDLEO V-racing", "REDLEO Ver 8.033"]
+    },
+    {
+      "name": "Uma",
+      "display_name": "Uma",
+      "description": "Phần mềm dyno Uma",
+      "zip": "Uma.zip",
+      "size_mb": 1,
+      "versions": ["Uma"]
+    }
+  ]
+}
