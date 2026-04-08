@@ -1,0 +1,10 @@
+{
+  "background_color": "#1a1a2e",
+  "card_gradient_start": "#16213e",
+  "card_gradient_end": "#0f3460",
+  "accent_color": "#e94560",
+  "text_color": "#e0e0e0",
+  "font_family": "Segoe UI",
+  "font_size": 12,
+  "logo_path": "images/logo.png"
+}

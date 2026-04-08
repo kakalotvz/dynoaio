@@ -1,0 +1,4 @@
+# file: D:\Dyno AIO 2\src\core.py
+# hypothesis_version: 6.151.11
+
+['.exe', '.msi', 'installable', 'portable', 'setup']

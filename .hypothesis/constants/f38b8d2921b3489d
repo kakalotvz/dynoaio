@@ -1,0 +1,4 @@
+# file: D:\Dyno AIO 2\src\launcher.py
+# hypothesis_version: 6.151.11
+
+[b'Inno Setup', b'InnoSetup', b'InstallShield', b'NSIS', b'Nullsoft', b'WiX', 258, 1000, 1155, 1203, 1638, '"', ',', '.exe', '.msi', '/S', '/s /v/qn', 'DisplayIcon', 'DisplayName', 'HKCU', 'HKLM', 'InstallLocation', 'ProgramFiles', 'ProgramFiles(x86)', 'ProgramW6432', '\\/', '\\amd\\', '\\asus\\', '\\common files\\', '\\intel\\', '\\microsoft\\', '\\nvidia\\', '\\system32\\', '\\syswow64\\', '\\users\\', '\\windows\\', '\\windowsapps\\', 'cbSize', 'dwHotKey', 'fMask', 'frozen', 'hIconOrMonitor', 'hInstApp', 'hProcess', 'hkeyClass', 'hwnd', 'innosetup', 'installed', 'installed.flag', 'installshield', 'lpClass', 'lpDirectory', 'lpFile', 'lpIDList', 'lpParameters', 'lpVerb', 'msiexec', 'nShow', 'nsis', 'open', 'rb', 'runas', 'setup', 'unknown', 'utf-8', 'w', 'wix', 'Đang cài đặt...']

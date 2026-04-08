@@ -1,0 +1,4 @@
+# file: D:\Dyno AIO 2\src\launcher.py
+# hypothesis_version: 6.151.11
+
+['"', ',', '.exe', '.msi', '/S', '/i', '/norestart', '/quiet', 'DisplayIcon', 'DisplayName', 'InstallLocation', 'ProgramFiles', 'ProgramFiles(x86)', 'ProgramW6432', 'msiexec', 'setup', 'Đang cài đặt...']

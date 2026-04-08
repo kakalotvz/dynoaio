@@ -1,0 +1,4 @@
+# file: D:\Dyno AIO 2\src\launcher.py
+# hypothesis_version: 6.151.11
+
+[258, 1000, '.exe', '.msi', 'cbSize', 'dwHotKey', 'fMask', 'frozen', 'hIconOrMonitor', 'hInstApp', 'hProcess', 'hkeyClass', 'hwnd', 'installed', 'installed.flag', 'lpClass', 'lpDirectory', 'lpFile', 'lpIDList', 'lpParameters', 'lpVerb', 'msiexec', 'nShow', 'runas', 'setup', 'utf-8', 'w', 'Đang cài đặt...']
