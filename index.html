@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dyno All In One</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a1a2e;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    header {
+      width: 100%;
+      background: linear-gradient(90deg, #0d1b3e, #1a1a2e);
+      padding: 24px 40px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      border-bottom: 1px solid #0f3460;
+    }
+    header h1 { font-size: 2rem; color: #e0e0e0; }
+    header span { color: #e94560; }
+    .hero {
+      text-align: center;
+      padding: 80px 20px 40px;
+      max-width: 700px;
+    }
+    .hero h2 { font-size: 2.4rem; margin-bottom: 16px; }
+    .hero p { font-size: 1.1rem; color: #8899bb; line-height: 1.7; margin-bottom: 36px; }
+    .btn-download {
+      display: inline-block;
+      background: linear-gradient(90deg, #e94560, #c0392b);
+      color: #fff;
+      padding: 14px 40px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      text-decoration: none;
+      letter-spacing: 1px;
+      transition: opacity 0.2s;
+    }
+    .btn-download:hover { opacity: 0.85; }
+    .features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      padding: 60px 20px;
+      max-width: 900px;
+    }
+    .card {
+      background: linear-gradient(135deg, #16213e, #0f3460);
+      border-radius: 10px;
+      padding: 28px 24px;
+      width: 260px;
+      border: 1px solid #0f3460;
+    }
+    .card h3 { color: #e94560; margin-bottom: 10px; font-size: 1.1rem; }
+    .card p { color: #8899bb; font-size: 0.95rem; line-height: 1.6; }
+    footer {
+      margin-top: auto;
+      padding: 24px;
+      color: #444466;
+      font-size: 0.85rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Dyno <span>All In One</span></h1>
+  </header>
+
+  <section class="hero">
+    <h2>Launcher phần mềm Dyno xe đua</h2>
+    <p>
+      Tổng hợp tất cả phần mềm dyno (Redleo, Apitech, ATE, BRT, Uma, Aracer, ALLMOTO...)
+      vào một giao diện duy nhất. Cài đặt và khởi chạy chỉ với vài cú nhấp chuột.
+    </p>
+    <a class="btn-download" href="https://github.com/kakalotvz/dynoaio/releases/latest" target="_blank">
+      ⬇ Tải về (.exe)
+    </a>
+  </section>
+
+  <section class="features">
+    <div class="card">
+      <h3>🚀 Khởi chạy nhanh</h3>
+      <p>Chọn phần mềm, chọn phiên bản, nhấn chạy — không cần tìm kiếm thủ công.</p>
+    </div>
+    <div class="card">
+      <h3>🔧 Cài đặt tự động</h3>
+      <p>Tự nhận dạng Portable hay Installable, cài đặt silent không cần wizard.</p>
+    </div>
+    <div class="card">
+      <h3>🎨 Giao diện Dark Theme</h3>
+      <p>Thiết kế tối, gradient đẹp mắt, phong cách xe đua chuyên nghiệp.</p>
+    </div>
+    <div class="card">
+      <h3>🖥 Windows Native</h3>
+      <p>Ứng dụng desktop Windows, không cần cài Python hay runtime phụ.</p>
+    </div>
+  </section>
+
+  <footer>
+    &copy; 2026 Dyno All In One &mdash; <a href="https://github.com/kakalotvz/dynoaio" style="color:#e94560;">GitHub</a>
+  </footer>
+</body>
+</html>
