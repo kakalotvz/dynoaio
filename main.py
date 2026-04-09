@@ -63,6 +63,11 @@ def _exe_dir() -> str:
 
 
 def main() -> None:
+    # Fix SSL certificates for PyInstaller bundle
+    import certifi, ssl, os as _os
+    _os.environ.setdefault("SSL_CERT_FILE", certifi.where())
+    _os.environ.setdefault("REQUESTS_CA_BUNDLE", certifi.where())
+
     from PyQt6.QtWidgets import QApplication
     from PyQt6.QtGui import QFont, QPalette, QColor
 

@@ -1,71 +1,82 @@
 {
   "version": "1.0",
-  "updated": "2026-04-08",
+  "updated": "2026-04-09",
   "base_url": "https://github.com/kakalotvz/dynoaio/releases/download/apps",
   "apps": [
     {
       "name": "ALLMOTO",
       "display_name": "ALLMOTO PC",
       "description": "Phần mềm dyno ALLMOTO",
-      "zip": "ALLMOTO.zip",
-      "size_mb": 145,
-      "versions": ["ALLMOTO"]
+      "versions": [
+        { "name": "ALLMOTO", "zip": "ALLMOTO.zip", "size_mb": 141 }
+      ]
     },
     {
       "name": "Apitech",
       "display_name": "Apitech",
       "description": "Phần mềm dyno Apitech",
-      "zip": "Apitech.zip",
-      "size_mb": 24,
-      "versions": ["Piggyback 2014", "STANDALONE V9"]
+      "versions": [
+        { "name": "Piggyback 2014", "zip": "Piggyback.2014.zip", "size_mb": 6 },
+        { "name": "STANDALONE V9", "zip": "STANDALONE.V9.zip", "size_mb": 18 }
+      ]
     },
     {
       "name": "Aracer",
       "display_name": "Aracer",
       "description": "Phần mềm dyno Aracer RC Mini",
-      "zip": "Aracer.zip",
-      "size_mb": 116,
-      "versions": ["RC Mini Plus 2 & Mini 4C", "RC Mini5 QB v5.3"]
+      "versions": [
+        { "name": "RC Mini Plus 2 & Mini 4C", "zip": "RC.Mini.Plus.2.Mini.4C.zip", "size_mb": 56 },
+        { "name": "RC Mini5 QB v5.3", "zip": "RC.Mini5.QB.v5.3.zip", "size_mb": 59 }
+      ]
     },
     {
       "name": "ATE",
       "display_name": "ATE",
       "description": "Phần mềm dyno ATE ECU Pro",
-      "zip": "ATE.zip",
-      "size_mb": 222,
-      "versions": ["ATE 2.1.2.0", "ATE Ecu Pro 8.035", "ATE Ecu Pro 9.01"]
+      "versions": [
+        { "name": "ATE 2.1.2.0", "zip": "ATE.2.1.2.0.zip", "size_mb": 74 },
+        { "name": "ATE Ecu Pro 8.035", "zip": "ATE.Ecu.Pro.8.035.zip", "size_mb": 75 },
+        { "name": "ATE Ecu Pro 9.01", "zip": "ATE.Ecu.Pro.9.01.zip", "size_mb": 70 }
+      ]
     },
     {
       "name": "BRT",
       "display_name": "BRT",
       "description": "Phần mềm dyno BRT Juken",
-      "zip": "BRT.zip",
-      "size_mb": 128,
-      "versions": ["JUKEN 5", "JUKEN 5+ và 5++"]
+      "versions": [
+        { "name": "JUKEN 5", "zip": "JUKEN.5.zip", "size_mb": 27 },
+        { "name": "JUKEN 5+ và 5++", "zip": "JUKEN.5+.va.5++.zip", "size_mb": 87 }
+      ]
     },
     {
       "name": "Kozi",
       "display_name": "Kozi",
       "description": "Phần mềm dyno Kozi ECU Pro",
-      "zip": "Kozi.zip",
-      "size_mb": 3,
-      "versions": ["KOZI ECU Pro V8"]
+      "versions": [
+        { "name": "KOZI ECU Pro V8", "zip": "KOZI.ECU.Pro.V8.zip", "size_mb": 3 }
+      ]
     },
     {
       "name": "Redleo",
       "display_name": "Redleo",
       "description": "Phần mềm dyno Redleo ECU/CDI",
-      "zip": "Redleo.zip",
-      "size_mb": 403,
-      "versions": ["REDLEO CDI Pro V3", "REDLEO CDI Pro V6.1.8", "REDLEO ECU Pro 9.13", "REDLEO ECU PRO 9.2", "REDLEO Ultra Pro", "REDLEO V-racing", "REDLEO Ver 8.033"]
+      "versions": [
+        { "name": "REDLEO CDI Pro V3", "zip": "REDLEO.CDI.Pro.V3.zip", "size_mb": 69 },
+        { "name": "REDLEO CDI Pro V6.1.8", "zip": "REDLEO.CDI.Pro.V6.1.8.zip", "size_mb": 4 },
+        { "name": "REDLEO ECU Pro 9.13", "zip": "REDLEO.ECU.Pro.9.13.zip", "size_mb": 75 },
+        { "name": "REDLEO ECU PRO 9.2", "zip": "REDLEO.ECU.PRO.9.2.zip", "size_mb": 76 },
+        { "name": "REDLEO Ultra Pro", "zip": "REDLEO.Ultra.Pro.zip", "size_mb": 10 },
+        { "name": "REDLEO V-racing", "zip": "REDLEO.V-racing.zip", "size_mb": 74 },
+        { "name": "REDLEO Ver 8.033", "zip": "REDLEO.Ver.8.033.zip", "size_mb": 74 }
+      ]
     },
     {
       "name": "Uma",
       "display_name": "Uma",
       "description": "Phần mềm dyno Uma",
-      "zip": "Uma.zip",
-      "size_mb": 1,
-      "versions": ["M9"]
+      "versions": [
+        { "name": "M9", "zip": "M9.zip", "size_mb": 30 }
+      ]
     }
   ]
 }

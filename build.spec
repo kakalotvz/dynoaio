@@ -14,9 +14,10 @@ a = Analysis(
     datas=[
         ('images',    'images'),    # bundle vào exe
         ('theme.json','.'),         # bundle vào exe
+        (r'C:\Users\MrX\AppData\Local\Programs\Python\Python313\Lib\site-packages\certifi\cacert.pem', 'certifi'),
         # Apps/ và Drivers/ KHÔNG bundle — installer sẽ extract riêng
     ],
-    hiddenimports=[],
+    hiddenimports=['certifi'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

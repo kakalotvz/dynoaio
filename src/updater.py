@@ -16,76 +16,133 @@ CATALOG_URL = "https://github.com/kakalotvz/dynoaio/releases/download/catalog/ca
 
 
 # ---------------------------------------------------------------------------
+# SSL helper
+# ---------------------------------------------------------------------------
+
+def _make_ssl_ctx():
+    """Tạo SSL context với certifi CA bundle, hỗ trợ cả dev và PyInstaller."""
+    import ssl
+    ca_file = None
+    # Ưu tiên SSL_CERT_FILE env (set bởi main.py khi frozen)
+    env_ca = os.environ.get("SSL_CERT_FILE")
+    if env_ca and os.path.isfile(env_ca):
+        ca_file = env_ca
+    else:
+        try:
+            import certifi
+            ca_file = certifi.where()
+        except ImportError:
+            pass
+    if ca_file and os.path.isfile(ca_file):
+        return ssl.create_default_context(cafile=ca_file)
+    # Fallback: không verify (tránh crash hoàn toàn)
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    return ctx
+
+
+# ---------------------------------------------------------------------------
 # App catalog
 # ---------------------------------------------------------------------------
+
+@dataclass
+class VersionEntry:
+    name: str
+    zip_url: str
+    size_mb: int
+
 
 @dataclass
 class AppEntry:
     name: str
     display_name: str
     description: str
-    zip_url: str
-    size_mb: int
-    versions: list[str]
+    versions: list[VersionEntry]
 
 
 def fetch_catalog() -> list[AppEntry] | None:
     """Tải catalog.json từ GitHub. Trả về None nếu lỗi."""
     try:
-        req = urllib.request.Request(CATALOG_URL, headers={"User-Agent": "DynoAIO/1.0"})
-        with urllib.request.urlopen(req, timeout=10) as r:
-            data = json.loads(r.read())
+        ctx = _make_ssl_ctx()
+        req = urllib.request.Request(CATALOG_URL, headers={
+            "User-Agent": "Mozilla/5.0 DynoAIO/1.0",
+            "Accept": "application/json, */*",
+        })
+        with urllib.request.urlopen(req, timeout=15, context=ctx) as r:
+            raw = r.read()
+        data = json.loads(raw)
         base_url = data.get("base_url", "")
         entries = []
         for item in data.get("apps", []):
-            entries.append(AppEntry(
-                name=item["name"],
-                display_name=item.get("display_name", item["name"]),
-                description=item.get("description", ""),
-                zip_url=f"{base_url}/{item['zip']}",
-                size_mb=item.get("size_mb", 0),
-                versions=item.get("versions", []),
-            ))
-        return entries
+            try:
+                versions = [
+                    VersionEntry(
+                        name=str(v["name"]),
+                        zip_url=f"{base_url}/{v['zip']}",
+                        size_mb=int(v.get("size_mb", 0) or 0),
+                    )
+                    for v in item.get("versions", [])
+                ]
+                entries.append(AppEntry(
+                    name=item["name"],
+                    display_name=item.get("display_name", item["name"]),
+                    description=item.get("description", ""),
+                    versions=versions,
+                ))
+            except Exception as item_err:
+                logging.warning("fetch_catalog item error: %s item=%s", item_err, item)
+        logging.warning("fetch_catalog entries count: %d", len(entries))
+        return entries if entries else []
     except Exception as e:
-        logging.warning("fetch_catalog error: %s", e)
+        logging.warning("fetch_catalog error type=%s msg=%s", type(e).__name__, e)
         return None
 
 
-def download_app(entry: AppEntry, apps_dir: str,
-                 on_progress: callable = None) -> tuple[bool, str]:
-    """Tải zip của app về và giải nén vào apps_dir.
-    
-    on_progress(downloaded_bytes, total_bytes) — callback tiến trình.
-    Trả về (success, message).
-    """
+def find_version_entry(catalog: list[AppEntry], app_name: str, version_name: str) -> VersionEntry | None:
+    """Tìm VersionEntry theo tên app và tên version."""
+    for app in catalog:
+        if app.name.lower() == app_name.lower():
+            for v in app.versions:
+                if v.name.lower() == version_name.lower():
+                    return v
+    return None
+
+
+def download_version(version_entry: VersionEntry, apps_dir: str, app_name: str,
+                     on_progress: callable = None) -> tuple[bool, str]:
+    """Tải zip của 1 version về và giải nén vào apps_dir/app_name/version_name/."""
     try:
-        os.makedirs(apps_dir, exist_ok=True)
-        req = urllib.request.Request(entry.zip_url, headers={"User-Agent": "DynoAIO/1.0"})
+        version_dir = os.path.join(apps_dir, app_name, version_entry.name)
+        os.makedirs(version_dir, exist_ok=True)
+
+        ctx = _make_ssl_ctx()
+        req = urllib.request.Request(version_entry.zip_url, headers={
+            "User-Agent": "Mozilla/5.0 DynoAIO/1.0",
+            "Accept": "*/*",
+        })
 
         with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as tmp:
             tmp_path = tmp.name
 
         try:
-            with urllib.request.urlopen(req, timeout=60) as response:
+            with urllib.request.urlopen(req, timeout=120, context=ctx) as response:
                 total = int(response.headers.get("Content-Length", 0))
                 downloaded = 0
-                chunk = 65536  # 64KB chunks
                 with open(tmp_path, "wb") as f:
                     while True:
-                        data = response.read(chunk)
-                        if not data:
+                        chunk = response.read(65536)
+                        if not chunk:
                             break
-                        f.write(data)
-                        downloaded += len(data)
+                        f.write(chunk)
+                        downloaded += len(chunk)
                         if on_progress:
                             on_progress(downloaded, total)
 
-            # Giải nén vào Apps/
             with zipfile.ZipFile(tmp_path, "r") as zf:
-                zf.extractall(apps_dir)
+                zf.extractall(version_dir)
 
-            return True, f"Đã tải và cài đặt {entry.display_name}"
+            return True, f"Đã tải {version_entry.name} thành công"
         finally:
             try:
                 os.remove(tmp_path)
@@ -93,8 +150,8 @@ def download_app(entry: AppEntry, apps_dir: str,
                 pass
 
     except Exception as e:
-        logging.warning("download_app %s error: %s", entry.name, e)
-        return False, f"Lỗi tải {entry.display_name}: {e}"
+        logging.warning("download_version %s error type=%s msg=%s", version_entry.name, type(e).__name__, e)
+        return False, f"Lỗi tải {version_entry.name}: {type(e).__name__}: {e}"
 
 
 # ---------------------------------------------------------------------------
@@ -102,30 +159,25 @@ def download_app(entry: AppEntry, apps_dir: str,
 # ---------------------------------------------------------------------------
 
 def check_app_update(version: str) -> tuple[str | None, str | None]:
-    """Kiểm tra bản cập nhật — lọc release có tag dạng version (1.0, v1.1, ...).
-    
-    Trả về (latest_version, download_url) hoặc (None, None) nếu lỗi/không có bản mới.
-    """
+    """Kiểm tra bản cập nhật — lọc release có tag dạng version số."""
     import re
     VERSION_RE = re.compile(r'^v?(\d+\.\d+(?:\.\d+)?)$')
-
     try:
-        # Lấy danh sách tất cả releases, lọc tag dạng version
         req = urllib.request.Request(
             f"{GITHUB_API}?per_page=20",
             headers={"User-Agent": "DynoAIO/1.0"}
         )
-        with urllib.request.urlopen(req, timeout=8) as r:
+        ctx = _make_ssl_ctx()
+        with urllib.request.urlopen(req, timeout=8, context=ctx) as r:
             releases = json.loads(r.read())
 
-        # Tìm release mới nhất có tag dạng version số
         latest_data = None
         latest_ver = None
         for release in releases:
             tag = release.get("tag_name", "")
             m = VERSION_RE.match(tag)
             if not m:
-                continue  # bỏ qua "catalog", "apps", v.v.
+                continue
             ver = m.group(1)
             if latest_ver is None or _ver_tuple(ver) > _ver_tuple(latest_ver):
                 latest_ver = ver
@@ -134,7 +186,6 @@ def check_app_update(version: str) -> tuple[str | None, str | None]:
         if not latest_ver or _ver_tuple(latest_ver) <= _ver_tuple(version):
             return None, None
 
-        # Tìm asset .exe trong release đó
         exe_url = None
         for asset in latest_data.get("assets", []):
             name = asset.get("name", "").lower()
@@ -154,7 +205,6 @@ def check_app_update(version: str) -> tuple[str | None, str | None]:
 
 
 def _ver_tuple(v: str) -> tuple:
-    """Chuyển '1.2.3' thành (1, 2, 3) để so sánh."""
     try:
         return tuple(int(x) for x in v.split("."))
     except Exception:
@@ -163,10 +213,7 @@ def _ver_tuple(v: str) -> tuple:
 
 def download_and_replace_exe(download_url: str,
                               on_progress: callable = None) -> tuple[bool, str]:
-    """Tải exe mới về và thay thế exe hiện tại (chỉ thay exe, không đụng Apps/Drivers).
-    
-    Dùng batch script để rename sau khi app thoát.
-    """
+    """Tải exe mới về và thay thế exe hiện tại."""
     try:
         current_exe = sys.executable if getattr(sys, "frozen", False) else None
         if not current_exe:
@@ -176,8 +223,9 @@ def download_and_replace_exe(download_url: str,
         new_exe = os.path.join(exe_dir, "_update_new.exe")
         old_exe = os.path.join(exe_dir, "_update_old.exe")
 
+        ctx = _make_ssl_ctx()
         req = urllib.request.Request(download_url, headers={"User-Agent": "DynoAIO/1.0"})
-        with urllib.request.urlopen(req, timeout=120) as response:
+        with urllib.request.urlopen(req, timeout=120, context=ctx) as response:
             total = int(response.headers.get("Content-Length", 0))
             downloaded = 0
             with open(new_exe, "wb") as f:
@@ -190,7 +238,6 @@ def download_and_replace_exe(download_url: str,
                     if on_progress:
                         on_progress(downloaded, total)
 
-        # Tạo batch script để swap exe sau khi app thoát
         bat_path = os.path.join(exe_dir, "_update.bat")
         bat_content = f"""@echo off
 timeout /t 2 /nobreak >nul

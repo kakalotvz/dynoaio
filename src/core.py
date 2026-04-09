@@ -91,13 +91,13 @@ class AppScanner:
                 logo_path = candidate
                 break
 
-        # A sub-dir is a version only if it directly contains a setup file
-        # (.exe/.msi with "setup" in name) OR a runnable .exe.
-        # Driver/tool sub-dirs (e.g. ftdi_ft232_drive/) typically have no
-        # setup file and no standalone exe, so they are excluded.
+        # Tất cả sub-dir đều là version (kể cả rỗng — sẽ hiển thị "Chưa có dữ liệu" để tải về)
+        # Chỉ loại trừ các thư mục driver/tool đặc biệt không phải phiên bản phần mềm
+        EXCLUDED_DIRS = {"driver", "drivers", "ftdi_ft232_drive", "ilink driver",
+                         "dotnetfx40", "windowsinstaller3_1"}
         sub_dirs = [
             e for e in children
-            if e.is_dir() and self._detector.detect(e.path) != AppType.EMPTY
+            if e.is_dir() and e.name.lower() not in EXCLUDED_DIRS
         ]
 
         if sub_dirs:

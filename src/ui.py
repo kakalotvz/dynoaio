@@ -166,6 +166,7 @@ class AppCard(QFrame):
 class AppListScreen(QWidget):
     app_selected = pyqtSignal(object)
     install_drivers_requested = pyqtSignal()
+    download_app_requested = pyqtSignal(str)  # app_name
 
     def __init__(self, apps: list[AppInfo], theme: ThemeConfig, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -312,9 +313,9 @@ class VersionCard(QFrame):
             tooltip = "Nhấp chuột vào để mở"
             clickable = True
         else:
-            badge_color, badge_text = "#666688", "Chưa có dữ liệu"
-            tooltip = "Thư mục chưa có tệp phần mềm"
-            clickable = False
+            badge_color, badge_text = "#e67e22", "⬇ Tải về"
+            tooltip = "Nhấp để tải phiên bản này về"
+            clickable = True
 
         self.setToolTip(tooltip)
         self.setCursor(Qt.CursorShape.PointingHandCursor if clickable
@@ -484,7 +485,8 @@ class LoadingOverlay(QWidget):
 class VersionListScreen(QWidget):
     back_requested = pyqtSignal()
     version_selected = pyqtSignal(object)
-    uninstall_requested = pyqtSignal(object)  # emit VersionInfo
+    uninstall_requested = pyqtSignal(object)
+    download_version_requested = pyqtSignal(str, str)  # app_name, version_name
 
     def __init__(self, app_info: AppInfo, theme: ThemeConfig, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -567,7 +569,15 @@ class VersionListScreen(QWidget):
             for version in self._app_info.versions:
                 already = bool(is_installed(self._app_info.name, version.name))
                 card = VersionCard(version, self._theme, installed=already)
-                card.clicked.connect(self.version_selected)
+                if version.app_type.value == "empty":
+                    # Version chưa có dữ liệu → click để tải về
+                    card.clicked.connect(
+                        lambda _, v=version: self.download_version_requested.emit(
+                            self._app_info.name, v.name
+                        )
+                    )
+                else:
+                    card.clicked.connect(self.version_selected)
                 card.uninstall_requested.connect(self.uninstall_requested)
                 self._card_layout.addWidget(card)
                 self._cards.append(card)
@@ -781,10 +791,46 @@ class _DriverInstallWorker(QThread):
 
 
 # ---------------------------------------------------------------------------
-# MainWindow
-# ---------------------------------------------------------------------------
 # BodyWidget — body area with background image
 # ---------------------------------------------------------------------------
+
+class _DownloadAppWorker(QThread):
+    """Tải zip của 1 version từ GitHub Release về và giải nén vào Apps/."""
+    progress = pyqtSignal(int, int)
+    finished = pyqtSignal(bool, str)
+
+    def __init__(self, app_name: str, version_name: str, apps_dir: str) -> None:
+        super().__init__()
+        self._app_name = app_name
+        self._version_name = version_name
+        self._apps_dir = apps_dir
+
+    def run(self) -> None:
+        try:
+            from src.updater import fetch_catalog, find_version_entry, download_version
+            catalog = fetch_catalog()
+            if catalog is None:
+                self.finished.emit(False, "Không thể kết nối đến máy chủ. Kiểm tra kết nối mạng.")
+                return
+            if len(catalog) == 0:
+                self.finished.emit(False, "Danh sách phần mềm trống. Vui lòng thử lại sau.")
+                return
+
+            entry = find_version_entry(catalog, self._app_name, self._version_name)
+            if not entry:
+                self.finished.emit(False, f"Không tìm thấy '{self._version_name}' trong danh sách.")
+                return
+
+            def _on_progress(downloaded: int, total: int) -> None:
+                self.progress.emit(downloaded, total)
+
+            success, msg = download_version(entry, self._apps_dir, self._app_name,
+                                            on_progress=_on_progress)
+            self.finished.emit(success, msg)
+        except Exception as exc:
+            import traceback
+            self.finished.emit(False, f"Lỗi: {traceback.format_exc()}")
+
 
 class _BodyWidget(QWidget):
     """Body area that paints background image + grid overlay."""
@@ -846,6 +892,7 @@ class MainWindow(QMainWindow):
         self._worker: _InstallWorker | None = None
         self._uninstall_worker: _UninstallWorker | None = None
         self._driver_worker: _DriverInstallWorker | None = None
+        self._download_worker: _DownloadAppWorker | None = None
         self._current_version_screen: VersionListScreen | None = None
         self._loading: LoadingOverlay | None = None
         self._build_ui()
@@ -1134,6 +1181,7 @@ class MainWindow(QMainWindow):
         self._app_list_screen = AppListScreen(self._apps, self._theme)
         self._app_list_screen.app_selected.connect(self._on_app_selected)
         self._app_list_screen.install_drivers_requested.connect(self._on_install_drivers)
+        self._app_list_screen.download_app_requested.connect(self._on_download_app_requested)
         self._stack.addWidget(self._app_list_screen)
         # Loading overlay lives on top of the central widget
         self._loading = LoadingOverlay(central)
@@ -1179,11 +1227,70 @@ class MainWindow(QMainWindow):
         else:
             QMessageBox.warning(self, "Cài đặt Driver", message)
 
+    def _on_download_app_requested(self, app_name: str) -> None:
+        """Không dùng nữa — giữ để tương thích."""
+        pass
+
+    def _on_download_version_requested(self, app_name: str, version_name: str) -> None:
+        """Tải 1 version cụ thể từ GitHub về."""
+        from main import _exe_dir
+        apps_dir = os.path.join(_exe_dir(), "Apps")
+
+        msg = QMessageBox(self)
+        msg.setWindowTitle("Tải phiên bản")
+        msg.setText(f"Tải <b>{version_name}</b> của <b>{app_name}</b>?")
+        msg.setInformativeText("Phiên bản sẽ được tải về và giải nén tự động.")
+        msg.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        msg.button(QMessageBox.StandardButton.Yes).setText("Tải về")
+        msg.button(QMessageBox.StandardButton.No).setText("Hủy")
+        msg.setStyleSheet("QMessageBox { background-color: #16213e; color: #e0e0e0; }")
+        if msg.exec() != QMessageBox.StandardButton.Yes:
+            return
+
+        self._loading.show_blocking("install")
+        self._loading._title_lbl.setText("ĐANG TẢI PHẦN MỀM")
+        self._loading._sub_lbl.setText(f"Đang tải {version_name}...")
+        QApplication.processEvents()
+
+        self._download_worker = _DownloadAppWorker(app_name, version_name, apps_dir)
+        self._download_worker.progress.connect(self._on_download_progress)
+        self._download_worker.finished.connect(
+            lambda ok, msg, a=app_name: self._on_download_version_done(ok, msg, a)
+        )
+        self._download_worker.start()
+
+    def _on_download_version_done(self, success: bool, message: str, app_name: str) -> None:
+        self._loading.hide()
+        if success:
+            QMessageBox.information(self, "Tải về thành công", message)
+            # Rescan và refresh version screen hiện tại
+            from main import _exe_dir
+            from src.core import AppScanner
+            apps_dir = os.path.join(_exe_dir(), "Apps")
+            apps = AppScanner().scan(apps_dir)
+            app_info = next((a for a in apps if a.name == app_name), None)
+            if app_info and self._current_version_screen:
+                # Rebuild version screen với dữ liệu mới
+                self._on_app_selected(app_info)
+        else:
+            QMessageBox.warning(self, "Tải về thất bại", message)
+
+    def _on_download_progress(self, downloaded: int, total: int) -> None:
+        if total > 0:
+            pct = int(downloaded / total * 100)
+            mb_done = downloaded / 1024 / 1024
+            mb_total = total / 1024 / 1024
+            self._loading._sub_lbl.setText(
+                f"Đang tải... {pct}% ({mb_done:.1f}MB / {mb_total:.1f}MB)"
+            )
+            QApplication.processEvents()
+
     def _on_app_selected(self, app_info: AppInfo) -> None:
         screen = VersionListScreen(app_info, self._theme)
         screen.back_requested.connect(self._go_back)
         screen.version_selected.connect(self._on_version_selected)
         screen.uninstall_requested.connect(self._on_uninstall_requested)
+        screen.download_version_requested.connect(self._on_download_version_requested)
         while self._stack.count() > 1:
             old = self._stack.widget(1)
             self._stack.removeWidget(old)
