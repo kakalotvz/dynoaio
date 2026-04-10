@@ -609,6 +609,139 @@ class VersionListScreen(QWidget):
 
 
 # ---------------------------------------------------------------------------
+# InstallFailedDialog  — hiển thị khi silent install thất bại
+# ---------------------------------------------------------------------------
+
+class InstallFailedDialog(QDialog):
+    """Dialog lỗi cài đặt với 2 lựa chọn: OK (thử lại sau) và Cài tay."""
+
+    def __init__(self, error_msg: str, setup_file: str, target_dir: str,
+                 theme: ThemeConfig, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._setup_file = setup_file
+        self._target_dir = target_dir
+        self._theme = theme
+        self.setWindowTitle("Cài đặt thất bại")
+        self.setModal(True)
+        self.setFixedSize(460, 230)
+        self._build_ui(error_msg)
+        self.setStyleSheet(f"background-color: {theme.background_color};")
+
+    def _build_ui(self, error_msg: str) -> None:
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(24, 20, 24, 20)
+        layout.setSpacing(14)
+
+        # Icon + message
+        msg_row = QHBoxLayout()
+        icon_lbl = QLabel("⚠")
+        icon_lbl.setFont(QFont(self._theme.font_family, 22))
+        icon_lbl.setStyleSheet("color: #e67e22; background: transparent;")
+        icon_lbl.setFixedWidth(36)
+        msg_row.addWidget(icon_lbl, alignment=Qt.AlignmentFlag.AlignTop)
+
+        text_lbl = QLabel(
+            f"Cài đặt thất bại ({error_msg}).\n"
+            "Vui lòng thử lại sau, hoặc bạn có thể cài đặt thủ công."
+        )
+        text_lbl.setWordWrap(True)
+        text_lbl.setFont(QFont(self._theme.font_family, self._theme.font_size + 1))
+        text_lbl.setStyleSheet(f"color: {self._theme.text_color}; background: transparent;")
+        msg_row.addWidget(text_lbl)
+        layout.addLayout(msg_row)
+
+        # Hint đường dẫn cài tay
+        if self._setup_file:
+            hint = QLabel(
+                f"💡 Khi cài tay, hãy chọn đường dẫn:\n{self._target_dir}"
+            )
+            hint.setWordWrap(True)
+            hint.setFont(QFont(self._theme.font_family, self._theme.font_size - 1))
+            hint.setStyleSheet("color: #8899bb; background: transparent;")
+            layout.addWidget(hint)
+
+        layout.addStretch()
+
+        btn_row = QHBoxLayout()
+        btn_row.setSpacing(12)
+
+        ok_btn = QPushButton("OK")
+        ok_btn.setFont(QFont(self._theme.font_family, self._theme.font_size, QFont.Weight.Bold))
+        ok_btn.setFixedHeight(36)
+        ok_btn.setMinimumWidth(100)
+        ok_btn.setStyleSheet(
+            f"QPushButton {{ background-color: #444466; color: {self._theme.text_color};"
+            " border: none; border-radius: 6px; padding: 0 20px; }}"
+            "QPushButton:hover { background-color: #555577; }"
+        )
+        ok_btn.clicked.connect(self.reject)
+
+        manual_btn = QPushButton("🔧  Cài tay")
+        manual_btn.setFont(QFont(self._theme.font_family, self._theme.font_size, QFont.Weight.Bold))
+        manual_btn.setFixedHeight(36)
+        manual_btn.setMinimumWidth(120)
+        manual_btn.setStyleSheet(
+            f"QPushButton {{ background-color: {self._theme.accent_color}; color: #fff;"
+            " border: none; border-radius: 6px; padding: 0 20px; }}"
+            "QPushButton:hover { background-color: #c73652; }"
+        )
+        manual_btn.setEnabled(bool(self._setup_file and os.path.isfile(self._setup_file)))
+        manual_btn.clicked.connect(self._open_manual_installer)
+
+        btn_row.addStretch()
+        btn_row.addWidget(ok_btn)
+        btn_row.addWidget(manual_btn)
+        layout.addLayout(btn_row)
+
+    def _open_manual_installer(self) -> None:
+        """Mở installer với tham số /DIR= trỏ vào thư mục installed."""
+        import ctypes
+        import subprocess
+
+        setup = self._setup_file
+        target = self._target_dir
+
+        try:
+            os.makedirs(target, exist_ok=True)
+        except OSError:
+            pass
+
+        lower = setup.lower()
+        if lower.endswith(".msi"):
+            msiexec = os.path.join(
+                os.environ.get("SystemRoot", r"C:\Windows"), "System32", "msiexec.exe"
+            )
+            cmd = f'"{msiexec}" /i "{setup}" TARGETDIR="{target}"'
+            subprocess.Popen(cmd, shell=True)
+        else:
+            from src.launcher import SilentInstaller
+            installer_type = SilentInstaller._detect_installer_type(setup)
+            clean_target = target.rstrip("\\/")
+
+            if installer_type == "innosetup":
+                params = f'/DIR="{clean_target}"'
+            elif installer_type == "nsis":
+                params = f'/D={clean_target}'
+            elif installer_type in ("installshield", "wix", "advancedinstaller"):
+                params = f'/INSTALLDIR="{clean_target}"'
+            else:
+                params = f'/DIR="{clean_target}"'
+
+            ret = ctypes.windll.shell32.ShellExecuteW(
+                None, "runas", setup, params, os.path.dirname(setup), 1
+            )
+            if ret <= 32:
+                QMessageBox.warning(
+                    self, "Lỗi",
+                    f"Không thể mở trình cài đặt (code {ret}).\n"
+                    f"Vui lòng mở thủ công tại:\n{setup}"
+                )
+                return
+
+        self.accept()
+
+
+# ---------------------------------------------------------------------------
 # InstallDialog
 # ---------------------------------------------------------------------------
 
@@ -663,7 +796,8 @@ class InstallDialog(QDialog):
 # ---------------------------------------------------------------------------
 
 class _InstallWorker(QThread):
-    finished = pyqtSignal(bool, str, str)  # success, message/exe_path, version_name
+    # success, message/exe_path, version_name, setup_file (empty string on success)
+    finished = pyqtSignal(bool, str, str, str)
 
     def __init__(self, version: VersionInfo, app_name: str) -> None:
         super().__init__()
@@ -673,15 +807,20 @@ class _InstallWorker(QThread):
     def run(self) -> None:
         try:
             from src.launcher import InstallableRunner
+            # Lấy setup file trước để truyền lại khi lỗi
+            setup_files = InstallableRunner._find_all_setup_files(self._version.path)
+            setup_file = setup_files[0] if setup_files else ""
             result = InstallableRunner().run(
                 self._version,
                 self._app_name,
                 on_status=None,
             )
-            self.finished.emit(result.success, result.message, self._version.name)
+            self.finished.emit(result.success, result.message, self._version.name,
+                               "" if result.success else setup_file)
         except Exception as exc:
             import traceback
-            self.finished.emit(False, f"Lỗi không xác định: {traceback.format_exc()}", self._version.name)
+            self.finished.emit(False, f"Lỗi không xác định: {traceback.format_exc()}",
+                               self._version.name, "")
 
 
 class _UninstallWorker(QThread):
@@ -1336,11 +1475,21 @@ class MainWindow(QMainWindow):
         self._worker.finished.connect(self._on_install_finished)
         self._worker.start()
 
-    def _on_install_finished(self, success: bool, message: str, version_name: str) -> None:
+    def _on_install_finished(self, success: bool, message: str, version_name: str, setup_file: str) -> None:
         self._loading.hide()
 
         if not success:
-            QMessageBox.critical(self, "Lỗi cài đặt", message or "Cài đặt thất bại. Vui lòng thử lại.")
+            from src.launcher import installed_dir
+            app_name = self._current_version_screen._app_info.name if self._current_version_screen else ""
+            target = installed_dir(app_name, version_name)
+            dlg = InstallFailedDialog(
+                error_msg=message or "Lỗi không xác định",
+                setup_file=setup_file,
+                target_dir=target,
+                theme=self._theme,
+                parent=self,
+            )
+            dlg.exec()
             return
 
         if self._current_version_screen:
