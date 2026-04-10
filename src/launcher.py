@@ -744,6 +744,7 @@ class InstallableRunner:
             pass
 
         stop_event.set()
+        _track_install(app_name, version.name)
         return LaunchResult(success=True, message=exe_path)
 
     @staticmethod
@@ -1105,3 +1106,57 @@ class AppLauncher:
             return _launch_exe(exe)
 
         return InstallableRunner().run(version, app_name, on_status)
+
+
+# ---------------------------------------------------------------------------
+# Analytics — fire-and-forget, không ảnh hưởng app nếu lỗi mạng
+# ---------------------------------------------------------------------------
+
+def _track_install(app_name: str, version_name: str) -> None:
+    """Gửi event cài đặt lên Google Analytics Measurement Protocol."""
+    import threading
+    import urllib.request
+    import json
+
+    # Đọc config từ file (dev) hoặc fallback về giá trị bundle sẵn (exe)
+    def _load_config() -> tuple[str, str]:
+        config_paths = [
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "analytics_config.json"),
+            os.path.join(_exe_dir(), "analytics_config.json"),
+        ]
+        for path in config_paths:
+            try:
+                with open(path, encoding="utf-8") as f:
+                    cfg = json.load(f)
+                    return cfg["measurement_id"], cfg["api_secret"]
+            except (FileNotFoundError, KeyError, OSError):
+                continue
+        # Fallback: bundle sẵn trong exe (không lộ trong source code public)
+        return "G-LPB5MHQS2Y", "rOLsq1O8QK-NDv3eF0CRCw"
+
+    def _send() -> None:
+        try:
+            measurement_id, api_secret = _load_config()
+            payload = json.dumps({
+                "client_id": "dyno-aio-desktop",
+                "events": [{
+                    "name": "install",
+                    "params": {
+                        "app_name": app_name,
+                        "version_name": version_name,
+                    }
+                }]
+            }).encode()
+            url = (
+                f"https://www.google-analytics.com/mp/collect"
+                f"?measurement_id={measurement_id}&api_secret={api_secret}"
+            )
+            req = urllib.request.Request(
+                url, data=payload,
+                headers={"Content-Type": "application/json"}
+            )
+            urllib.request.urlopen(req, timeout=5)
+        except Exception:
+            pass  # không crash app nếu offline hoặc lỗi
+
+    threading.Thread(target=_send, daemon=True).start()

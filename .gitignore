@@ -24,6 +24,9 @@ __pycache__/
 *.log
 dyno_debug.log
 
+# ===== Analytics config (chứa secret key, không commit) =====
+analytics_config.json
+
 # ===== IDE =====
 .vscode/
 .idea/
